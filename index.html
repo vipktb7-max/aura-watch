@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>غرفة مشاهدة</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="static/style.css?v=4">
+  <link rel="stylesheet" href="static/style.css?v=5">
 </head>
 <body>
   <main id="app">
@@ -17,13 +17,27 @@
       <span id="live" class="live" hidden>مباشر</span>
     </header>
 
+    <form id="search-box" class="search" hidden>
+      <input id="search" type="search" enterkeyhint="search" autocomplete="off" placeholder="ابحث في يوتيوب">
+      <button class="search-go" type="submit" aria-label="ابحث">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+      </button>
+    </form>
+
     <section id="stage" class="stage">
       <div id="player"></div>
+      <div id="empty" class="empty" hidden>
+        <p id="empty-text">صاحب الغرفة يختار مقطع</p>
+      </div>
       <div id="shield" class="shield" hidden></div>
       <button id="join" class="join" hidden>
         <span class="join-icon" aria-hidden="true">▶</span>
         <span>انضم للمشاهدة</span>
       </button>
+      <div id="countdown" class="countdown" hidden>
+        <span class="countdown-n" id="countdown-n">10</span>
+        <span class="countdown-text">يشتغل بعده ↤ <b id="countdown-title"></b></span>
+      </div>
       <button id="fullscreen" class="fs" title="شاشة كاملة" aria-label="شاشة كاملة">⛶</button>
     </section>
 
@@ -40,9 +54,19 @@
         </button>
       </div>
       <div class="row">
-        <button id="next" class="btn">الحلقة اللي بعدها</button>
+        <button id="skip" class="btn">شغل التالي</button>
         <button id="end" class="btn danger">انهاء الغرفة</button>
       </div>
+    </section>
+
+    <section id="next-box" class="card" hidden>
+      <h2>التالي <span id="next-hint" class="count"></span></h2>
+      <ul id="next-list" class="videos"></ul>
+    </section>
+
+    <section id="results-box" class="card" hidden>
+      <h2>نتايج البحث <span id="results-q" class="count"></span></h2>
+      <ul id="results" class="videos"></ul>
     </section>
 
     <section id="episodes-box" class="card" hidden>
@@ -59,6 +83,6 @@
       <p id="notice-text"></p>
     </div>
   </main>
-  <script src="static/app.js?v=4"></script>
+  <script src="static/app.js?v=5"></script>
 </body>
 </html>
