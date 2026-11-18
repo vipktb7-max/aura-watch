@@ -103,8 +103,9 @@
   function makePlayer(videoId) {
     if (!window.YT || !YT.Player) return;
     player = new YT.Player("player", {
+      host: "https://www.youtube-nocookie.com",          // YouTube's privacy player: no tracking, fewer ads
       videoId,
-      playerVars: { controls: me.host ? 1 : 0, disablekb: me.host ? 0 : 1, rel: 0, playsinline: 1,
+      playerVars: { controls: me.host ? 1 : 0, disablekb: me.host ? 0 : 1, rel: 0, playsinline: 1, iv_load_policy: 3,
                     modestbranding: 1, fs: 0, start: Math.floor(target()) },
       events: {
         onReady: () => { ready = true; joined = !state.playing; follow(); },
