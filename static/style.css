@@ -28,21 +28,13 @@ h1 { font-size: 17px; margin: 0; white-space: nowrap; overflow: hidden; text-ove
 .live::before { content: "● "; }
 
 .stage { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: var(--radius); overflow: hidden; }
-.stage iframe, #player { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-.shield { position: absolute; inset: 0; }                 /* viewers follow the host: no tapping the player */
+/* the picture's own box; YouTube's player inside is taller (its title and bottom strip fall outside, clipped) */
+.frame { position: absolute; inset: 0; overflow: hidden; }
+.frame iframe, #player { position: absolute; left: 0; top: 0; width: 100%; height: 100%; border: 0; }
 .join { position: absolute; inset: 0; margin: auto; width: max-content; height: max-content; display: flex; align-items: center;
   gap: 10px; padding: 12px 22px; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-text);
   font: inherit; font-weight: 600; cursor: pointer; box-shadow: 0 6px 24px rgb(0 0 0 / 35%); }
 .join-icon { font-size: 13px; }
-/* bottom-right like YouTube's own button; wide enough to sit over YouTube's logo there */
-.fs { position: absolute; bottom: 4px; right: 4px; width: clamp(128px, 36%, 168px); height: 38px; border: 0;
-  border-radius: 10px; background: #0f0f0f; color: #fff; cursor: pointer; display: flex; align-items: center; direction: ltr;
-  justify-content: flex-end; padding: 0 12px; z-index: 3; }
-.fs svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round;
-  stroke-linejoin: round; }
-.fs .fs-out, body.full .fs .fs-in { display: none; }
-body.full .fs .fs-out { display: block; }
-
 /* fullscreen inside Telegram: the video fills the screen; an upright phone shows it sideways, like YouTube */
 body.full { overflow: hidden; }
 body.full .stage { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; aspect-ratio: auto;
@@ -124,11 +116,6 @@ h2 { font-size: 14px; margin: 0 0 8px; display: flex; align-items: center; gap: 
   background: var(--accent); color: var(--accent-text); }
 .muted { color: var(--hint); font-size: 13px; padding: 4px 2px; }
 
-/* YouTube's double tap: left side back, right side forward (the middle and the bottom bar stay YouTube's) */
-.tap { position: absolute; top: 0; bottom: 52px; width: 34%; touch-action: manipulation; user-select: none;
-  -webkit-user-select: none; }
-.tap.left { left: 0; }
-.tap.right { right: 0; }
 .bubble { position: absolute; top: 50%; transform: translateY(-50%); padding: 8px 14px; border-radius: 999px;
   background: rgb(0 0 0 / 62%); color: #fff; font-size: 14px; font-weight: 700; pointer-events: none;
   direction: ltr; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
@@ -137,3 +124,25 @@ h2 { font-size: 14px; margin: 0 0 8px; display: flex; align-items: center; gap: 
   stroke-linejoin: round; }
 .bubble.left { left: 10%; }
 .bubble.right { right: 10%; }
+
+/* our own layer over the video (YouTube's controls are off): one tap shows it, the next hides it at once */
+.touch { position: absolute; inset: 0; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.overlay { position: absolute; inset: 0; pointer-events: none; background:
+  linear-gradient(to top, rgb(0 0 0 / 70%), transparent 38%), rgb(0 0 0 / 22%); }
+.overlay > * { pointer-events: auto; }
+.bigplay { position: absolute; inset: 0; margin: auto; width: 62px; height: 62px; border: 0; border-radius: 50%;
+  background: rgb(0 0 0 / 55%); color: #fff; display: grid; place-items: center; cursor: pointer; }
+.bigplay svg { width: 30px; height: 30px; fill: currentColor; }
+.bigplay .i-pause, .overlay.playing .bigplay .i-play { display: none; }
+.overlay.playing .bigplay .i-pause { display: block; }
+.bar { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 10px 2px; }
+.seekbar { display: block; width: 100%; height: 16px; margin: 0; accent-color: #f03; cursor: pointer; }
+.seekbar:disabled { cursor: default; opacity: .9; }
+.bar-row { display: flex; align-items: center; justify-content: space-between; height: 32px; }
+.clock { color: #fff; font-size: 12px; font-variant-numeric: tabular-nums; }
+.fs-btn { width: 40px; height: 32px; border: 0; background: transparent; color: #fff; display: grid; place-items: center;
+  cursor: pointer; }
+.fs-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round;
+  stroke-linejoin: round; }
+.fs-btn .fs-out, body.full .fs-btn .fs-in { display: none; }
+body.full .fs-btn .fs-out { display: block; }

@@ -7,6 +7,8 @@
   const qs = new URLSearchParams(location.search);
   const $ = (id) => document.getElementById(id);
   if (tg) { tg.ready(); tg.expand(); }
+  // turning the phone changes nothing (only fullscreen goes sideways): Telegram keeps the page as it opened
+  try { if (tg && tg.isVersionAtLeast && tg.isVersionAtLeast("8.0") && tg.lockOrientation) tg.lockOrientation(); } catch (e) { /* older Telegram */ }
 
   // «<room>_<tunnel>»: through the free Cloudflare tunnel the room server's address changes, so the room's
   // button carries it. Otherwise the room server is where this page is.
@@ -76,10 +78,12 @@
     $("search-box").hidden = !me.host;
     if (s.query !== shownQuery && document.activeElement !== $("search")) { $("search").value = s.query || ""; shownQuery = s.query; }
     $("controls").hidden = !me.host || !hasVideo();
-    $("shield").hidden = me.host || !hasVideo();
+    $("touch").hidden = !hasVideo();
+    $("bigplay").hidden = !me.host;
+    $("seekbar").disabled = !me.host;
+    if (!hasVideo()) hideOverlay(true);
     $("empty").hidden = hasVideo();
     $("empty-text").textContent = me.host ? "ابحث فوق واختار مقطع من النتايج" : "صاحب الغرفة يختار مقطع";
-    $("tap-back").hidden = $("tap-fwd").hidden = !me.host || !hasVideo();
     renderVideos("results", s.results || [], { pick: true });
     $("results-box").hidden = !(s.results && s.results.length);
     $("results-q").textContent = s.query || "";
@@ -143,10 +147,10 @@
     player = new YT.Player("player", {
       host: "https://www.youtube-nocookie.com",          // YouTube's privacy player: no tracking, fewer ads
       videoId,
-      playerVars: { controls: me.host ? 1 : 0, disablekb: me.host ? 0 : 1, rel: 0, playsinline: 1, iv_load_policy: 3,
+      playerVars: { controls: 0, disablekb: 1, rel: 0, playsinline: 1, iv_load_policy: 3,   // our own controls
                     modestbranding: 1, fs: 0, start: Math.floor(target()) },
       events: {
-        onReady: () => { ready = true; joined = joined || !state.playing; follow(); },
+        onReady: () => { ready = true; joined = joined || !state.playing; layoutVideo(); follow(); },
         onStateChange: onPlayer,
         onError: () => notice("هذا الفيديو صاحبه مانع عرضه برا يوتيوب" + (me.host ? "، اختار غيره" : ""))
       }
@@ -160,6 +164,24 @@
     else if (e.data === YT.PlayerState.PAUSED && state.playing) mine("pause", pos);
     else if (e.data === YT.PlayerState.ENDED && !state.ended) send({ t: "ended" });
   }
+  // YouTube draws its title over the top of its player and its strip over the bottom, and hides them only when
+  // it wants. So its player is made taller than the picture (black above and below it, where those go) and the
+  // picture's box clips the rest: the picture stays the same, those never show.
+  function layoutVideo() {
+    const st = $("stage"), W = st.clientWidth, H = st.clientHeight;       // the stage's own size (sideways too)
+    if (!W || !H) return;
+    let vw = W, vh = W * 9 / 16;
+    if (vh > H) { vh = H; vw = H * 16 / 9; }
+    const f = $("frame");
+    f.style.left = Math.round((W - vw) / 2) + "px"; f.style.top = Math.round((H - vh) / 2) + "px";
+    f.style.width = Math.round(vw) + "px"; f.style.height = Math.round(vh) + "px";
+    f.style.right = f.style.bottom = "auto";
+    const pad = Math.round(Math.max(72, vh * 0.3));
+    const p = $("player");
+    if (p) { p.style.top = -pad + "px"; p.style.height = Math.round(vh + 2 * pad) + "px"; }
+  }
+  if (window.ResizeObserver) new ResizeObserver(layoutVideo).observe($("stage"));
+  window.addEventListener("resize", layoutVideo);
   const api = document.createElement("script");
   api.src = "https://www.youtube.com/iframe_api";
   document.head.appendChild(api);
@@ -244,12 +266,12 @@
   // side goes back). The room moves once, when the taps stop.
   const dbl = { side: "", last: 0, total: 0, base: 0, timer: 0, hide: 0 };
   function dblTap(side) {
-    if (!player || !ready) return;
+    if (!player || !ready) return false;
     const now = performance.now();
     const going = dbl.total && dbl.side === side && now - dbl.last < 800;
     const second = !dbl.total && dbl.side === side && now - dbl.last < 350;
     dbl.side = side; dbl.last = now;
-    if (!going && !second) { dbl.total = 0; return; }
+    if (!going && !second) { dbl.total = 0; return false; }
     if (second) dbl.base = player.getCurrentTime() || 0;
     dbl.total += 10;
     const dir = side === "fwd" ? 1 : -1;
@@ -268,9 +290,63 @@
     clearTimeout(dbl.timer); clearTimeout(dbl.hide);
     dbl.timer = setTimeout(() => { mine("seek", player.getCurrentTime() || pos); dbl.total = 0; dbl.side = ""; }, 800);
     dbl.hide = setTimeout(() => { b.hidden = true; }, 900);
+    return true;
   }
-  $("tap-fwd").addEventListener("pointerdown", (e) => { e.preventDefault(); dblTap("fwd"); });
-  $("tap-back").addEventListener("pointerdown", (e) => { e.preventDefault(); dblTap("back"); });
+
+  // our layer over the video, like YouTube's app: one tap shows it, the next hides it at once; while playing it
+  // goes by itself after 3 s. Double taps on the sides seek (the host); the middle answers at once.
+  let hideTimer = 0, single = 0, dragging = false;
+  function showOverlay(playing) {
+    $("overlay").hidden = false;
+    paintBar();
+    clearTimeout(hideTimer); hideTimer = 0;
+    if (playing === undefined ? state && state.playing : playing) hideTimer = setTimeout(() => hideOverlay(), 3000);
+  }
+  function hideOverlay(force) {
+    if (dragging && !force) return;
+    clearTimeout(hideTimer); hideTimer = 0;
+    $("overlay").hidden = true;
+  }
+  function toggleOverlay() { if ($("overlay").hidden) showOverlay(); else hideOverlay(); }
+  function duration() { return (player && ready && player.getDuration()) || (state && state.video.duration) || 0; }
+  function paintBar() {
+    if (!player || !ready || !state) return;
+    const d = duration();
+    const c = dragging ? Number($("seekbar").value) / 1000 * d : (player.getCurrentTime() || 0);
+    $("clock").textContent = fmt(c) + " / " + fmt(d);
+    if (!dragging) $("seekbar").value = d ? Math.round(c / d * 1000) : 0;
+    $("overlay").classList.toggle("playing", !!state.playing);
+  }
+  setInterval(() => {
+    if ($("overlay").hidden) return;
+    paintBar();
+    if (state && state.playing && !hideTimer && !dragging) hideTimer = setTimeout(() => hideOverlay(), 3000);
+  }, 250);
+  $("touch").addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    const x = e.offsetX / (e.currentTarget.clientWidth || 1);     // the video's own sides, sideways or not
+    const side = x < 0.35 ? "back" : x > 0.65 ? "fwd" : "";
+    if (me.host && side && dblTap(side)) { clearTimeout(single); return; }
+    clearTimeout(single);
+    single = setTimeout(toggleOverlay, me.host && side ? 300 : 0);
+  });
+  $("bigplay").onclick = () => {
+    if (!player || !ready || !state) return;
+    joined = true;
+    const play = !state.playing;
+    if (play) player.playVideo(); else player.pauseVideo();
+    showOverlay(play);
+    $("overlay").classList.toggle("playing", play);
+  };
+  $("seekbar").addEventListener("input", () => { dragging = true; clearTimeout(hideTimer); paintBar(); });
+  $("seekbar").addEventListener("change", () => {
+    const pos = Number($("seekbar").value) / 1000 * duration();
+    dragging = false;
+    if (!me.host || !player || !ready) return;
+    player.seekTo(pos, true);
+    mine("seek", pos);
+    showOverlay();
+  });
   $("end").onclick = () => {
     const go = () => send({ t: "close" });
     if (tg && tg.showConfirm) tg.showConfirm("تنهي غرفة المشاهدة للكل؟", (ok) => ok && go()); else if (confirm("تنهي غرفة المشاهدة للكل؟")) go();
@@ -279,6 +355,7 @@
   // style turns the video sideways on an upright phone); Telegram hides its own bar too where it can.
   function setFull(on) {
     document.body.classList.toggle("full", on);
+    requestAnimationFrame(layoutVideo);
     const back = tg && tg.BackButton;
     try {
       if (tg && tg.isVersionAtLeast && tg.isVersionAtLeast("8.0")) { if (on) tg.requestFullscreen(); else tg.exitFullscreen(); }
