@@ -1,0 +1,73 @@
+/* Watch room: Telegram's own colours when opened inside Telegram (light or dark), a calm dark set otherwise. */
+:root {
+  --bg: var(--tg-theme-bg-color, #0f1115);
+  --card: var(--tg-theme-secondary-bg-color, #171a21);
+  --text: var(--tg-theme-text-color, #eef0f4);
+  --hint: var(--tg-theme-hint-color, #8b93a3);
+  --accent: var(--tg-theme-button-color, #3b82f6);
+  --accent-text: var(--tg-theme-button-text-color, #ffffff);
+  --danger: #e5484d;
+  --line: color-mix(in srgb, var(--hint) 22%, transparent);
+  --radius: 14px;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }     /* the page hides parts (host controls, notices) with «hidden» */
+html, body { margin: 0; background: var(--bg); color: var(--text); }
+body {
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Tahoma, "Noto Sans Arabic", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+#app { max-width: 720px; margin: 0 auto; padding: 12px 14px 28px; }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.titles { min-width: 0; }
+h1 { font-size: 17px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sub { margin: 2px 0 0; color: var(--hint); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.live { flex: none; font-size: 12px; padding: 3px 10px; border-radius: 999px;
+  background: color-mix(in srgb, var(--danger) 18%, transparent); color: var(--danger); }
+.live::before { content: "● "; }
+
+.stage { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: var(--radius); overflow: hidden; }
+.stage iframe, #player { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.stage:fullscreen { border-radius: 0; aspect-ratio: auto; }
+.shield { position: absolute; inset: 0; }                 /* viewers follow the host: no tapping the player */
+.join { position: absolute; inset: 0; margin: auto; width: max-content; height: max-content; display: flex; align-items: center;
+  gap: 10px; padding: 12px 22px; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-text);
+  font: inherit; font-weight: 600; cursor: pointer; box-shadow: 0 6px 24px rgb(0 0 0 / 35%); }
+.join-icon { font-size: 13px; }
+.fs { position: absolute; bottom: 8px; left: 8px; width: 34px; height: 34px; border: 0; border-radius: 10px;
+  background: rgb(0 0 0 / 55%); color: #fff; font-size: 16px; cursor: pointer; }
+
+.who { margin: 8px 2px 12px; color: var(--hint); font-size: 13px; }
+
+.controls { display: grid; gap: 8px; margin-bottom: 14px; }
+.row { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
+.btn { min-height: 44px; border: 0; border-radius: 12px; background: var(--card); color: var(--text);
+  font: inherit; font-weight: 600; cursor: pointer; }
+.btn.primary { background: var(--accent); color: var(--accent-text); }
+.btn.danger { color: var(--danger); }
+.btn:disabled { opacity: .45; cursor: default; }
+
+.card { background: var(--card); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; }
+h2 { font-size: 14px; margin: 0 0 8px; display: flex; align-items: center; gap: 8px; }
+.count { font-size: 12px; color: var(--hint); font-weight: 500; }
+
+.episodes { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow: auto; }
+.episodes li { padding: 9px 10px; border-radius: 10px; cursor: default; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.episodes li + li { margin-top: 2px; }
+.episodes li.now { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); font-weight: 600; }
+.episodes.host li { cursor: pointer; }
+.episodes.host li:not(.now):hover { background: var(--line); }
+
+.viewers { list-style: none; margin: 0; padding: 0; }
+.viewers li { display: flex; align-items: center; gap: 10px; padding: 7px 0; }
+.viewers li + li { border-top: 1px solid var(--line); }
+.avatar { flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--accent); font-weight: 700; font-size: 14px; }
+.name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tag { font-size: 11px; color: var(--accent); margin-inline-start: 6px; }
+.time { flex: none; color: var(--hint); font-variant-numeric: tabular-nums; font-size: 13px; direction: ltr; }
+
+.notice { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center;
+  background: color-mix(in srgb, var(--bg) 94%, transparent); }
+.notice p { max-width: 320px; font-size: 16px; }

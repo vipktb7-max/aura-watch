@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>غرفة مشاهدة</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="static/style.css?v=3">
+</head>
+<body>
+  <main id="app">
+    <header class="top">
+      <div class="titles">
+        <h1 id="room-title">غرفة مشاهدة</h1>
+        <p id="video-title" class="sub"></p>
+      </div>
+      <span id="live" class="live" hidden>مباشر</span>
+    </header>
+
+    <section id="stage" class="stage">
+      <div id="player"></div>
+      <div id="shield" class="shield" hidden></div>
+      <button id="join" class="join" hidden>
+        <span class="join-icon" aria-hidden="true">▶</span>
+        <span>انضم للمشاهدة</span>
+      </button>
+      <button id="fullscreen" class="fs" title="شاشة كاملة" aria-label="شاشة كاملة">⛶</button>
+    </section>
+
+    <p id="who" class="who"></p>
+
+    <section id="controls" class="controls" hidden>
+      <div class="row">
+        <button id="back10" class="btn" aria-label="رجوع 10 ثواني">−10</button>
+        <button id="toggle" class="btn primary" aria-label="تشغيل او ايقاف">تشغيل</button>
+        <button id="fwd10" class="btn" aria-label="تقديم 10 ثواني">+10</button>
+      </div>
+      <div class="row">
+        <button id="next" class="btn">الحلقة اللي بعدها</button>
+        <button id="end" class="btn danger">انهاء الغرفة</button>
+      </div>
+    </section>
+
+    <section id="episodes-box" class="card" hidden>
+      <h2>الحلقات</h2>
+      <ol id="episodes" class="episodes"></ol>
+    </section>
+
+    <section class="card">
+      <h2>الموجودين <span id="count" class="count">0</span></h2>
+      <ul id="viewers" class="viewers"></ul>
+    </section>
+
+    <div id="notice" class="notice" hidden>
+      <p id="notice-text"></p>
+    </div>
+  </main>
+  <script src="static/app.js?v=3"></script>
+</body>
+</html>
