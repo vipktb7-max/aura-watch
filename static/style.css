@@ -46,9 +46,6 @@ h1 { font-size: 17px; margin: 0; white-space: nowrap; overflow: hidden; text-ove
   font: inherit; font-weight: 600; cursor: pointer; }
 .btn.primary { background: var(--accent); color: var(--accent-text); }
 .btn.danger { color: var(--danger); }
-.btn.arrow { display: grid; place-items: center; }
-.btn.arrow svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.6;
-                 stroke-linecap: round; stroke-linejoin: round; }
 .btn:disabled { opacity: .45; cursor: default; }
 
 .card { background: var(--card); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; }
@@ -112,3 +109,17 @@ h2 { font-size: 14px; margin: 0 0 8px; display: flex; align-items: center; gap: 
 .badge { display: inline-block; margin-top: 4px; padding: 1px 8px; border-radius: 999px; font-size: 11px;
   background: var(--accent); color: var(--accent-text); }
 .muted { color: var(--hint); font-size: 13px; padding: 4px 2px; }
+
+/* YouTube's double tap: left side back, right side forward (the middle and the bottom bar stay YouTube's) */
+.tap { position: absolute; top: 0; bottom: 52px; width: 34%; touch-action: manipulation; user-select: none;
+  -webkit-user-select: none; }
+.tap.left { left: 0; }
+.tap.right { right: 0; }
+.bubble { position: absolute; top: 50%; transform: translateY(-50%); padding: 8px 14px; border-radius: 999px;
+  background: rgb(0 0 0 / 62%); color: #fff; font-size: 14px; font-weight: 700; pointer-events: none;
+  direction: ltr; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+.bubble span { direction: rtl; }
+.bubble svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round;
+  stroke-linejoin: round; }
+.bubble.left { left: 10%; }
+.bubble.right { right: 10%; }

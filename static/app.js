@@ -80,7 +80,7 @@
     $("empty").hidden = hasVideo();
     $("empty-text").textContent = me.host ? "ابحث فوق واختار مقطع من النتايج" : "صاحب الغرفة يختار مقطع";
     $("skip").disabled = !(s.next && s.next.length);
-    $("toggle").textContent = s.playing ? "ايقاف" : "تشغيل";
+    $("tap-back").hidden = $("tap-fwd").hidden = !me.host || !hasVideo();
     renderVideos("results", s.results || [], { pick: true });
     $("results-box").hidden = !(s.results && s.results.length);
     $("results-q").textContent = s.query || "";
@@ -230,10 +230,35 @@
     send({ t: "search", q });
   };
   $("join").onclick = () => { joined = true; $("join").hidden = true; follow(); if (ready && state.playing) player.playVideo(); };
-  $("toggle").onclick = () => { if (!player || !ready) return; joined = true;
-    const pos = player.getCurrentTime() || 0; send({ t: state.playing ? "pause" : "play", pos }); };
-  $("back10").onclick = () => ready && send({ t: "seek", pos: Math.max(0, (player.getCurrentTime() || 0) - 10) });
-  $("fwd10").onclick = () => ready && send({ t: "seek", pos: (player.getCurrentTime() || 0) + 10 });
+  // YouTube's double tap: two quick taps on the right go 10 s forward, each tap after that 10 s more (the left
+  // side goes back). The room moves once, when the taps stop.
+  const dbl = { side: "", last: 0, total: 0, base: 0, timer: 0, hide: 0 };
+  function dblTap(side) {
+    if (!player || !ready) return;
+    const now = performance.now();
+    const going = dbl.total && dbl.side === side && now - dbl.last < 800;
+    const second = !dbl.total && dbl.side === side && now - dbl.last < 350;
+    dbl.side = side; dbl.last = now;
+    if (!going && !second) { dbl.total = 0; return; }
+    if (second) dbl.base = player.getCurrentTime() || 0;
+    dbl.total += 10;
+    const dir = side === "fwd" ? 1 : -1;
+    const pos = Math.max(0, dbl.base + dir * dbl.total);
+    applying = true; player.seekTo(pos, true);
+    const b = $("seek-bubble");
+    b.className = "bubble " + (side === "fwd" ? "right" : "left");
+    const arrow = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    arrow.setAttribute("viewBox", "0 0 24 24");
+    arrow.innerHTML = side === "fwd" ? '<path d="M5 6l6 6-6 6M12 6l6 6-6 6"/>' : '<path d="M19 6l-6 6 6 6M12 6l-6 6 6 6"/>';
+    const words = document.createElement("span"); words.textContent = `${dbl.total} ثانية`;
+    if (side === "fwd") b.replaceChildren(words, arrow); else b.replaceChildren(arrow, words);
+    b.hidden = false;
+    clearTimeout(dbl.timer); clearTimeout(dbl.hide);
+    dbl.timer = setTimeout(() => { joined = true; send({ t: "seek", pos }); dbl.total = 0; dbl.side = ""; }, 800);
+    dbl.hide = setTimeout(() => { b.hidden = true; }, 900);
+  }
+  $("tap-fwd").addEventListener("pointerdown", (e) => { e.preventDefault(); dblTap("fwd"); });
+  $("tap-back").addEventListener("pointerdown", (e) => { e.preventDefault(); dblTap("back"); });
   $("skip").onclick = () => { joined = true; send({ t: "skip" }); };
   $("end").onclick = () => {
     const go = () => send({ t: "close" });

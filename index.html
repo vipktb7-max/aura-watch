@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>غرفة مشاهدة</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="static/style.css?v=5">
+  <link rel="stylesheet" href="static/style.css?v=6">
 </head>
 <body>
   <main id="app">
@@ -30,6 +30,9 @@
         <p id="empty-text">صاحب الغرفة يختار مقطع</p>
       </div>
       <div id="shield" class="shield" hidden></div>
+      <div id="tap-back" class="tap left" hidden></div>
+      <div id="tap-fwd" class="tap right" hidden></div>
+      <div id="seek-bubble" class="bubble" hidden></div>
       <button id="join" class="join" hidden>
         <span class="join-icon" aria-hidden="true">▶</span>
         <span>انضم للمشاهدة</span>
@@ -44,15 +47,6 @@
     <p id="who" class="who"></p>
 
     <section id="controls" class="controls" hidden>
-      <div class="row seek" dir="ltr">
-        <button id="back10" class="btn arrow" title="رجوع 10 ثواني" aria-label="رجوع 10 ثواني">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
-        </button>
-        <button id="toggle" class="btn primary" aria-label="تشغيل او ايقاف">تشغيل</button>
-        <button id="fwd10" class="btn arrow" title="تقديم 10 ثواني" aria-label="تقديم 10 ثواني">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
-        </button>
-      </div>
       <div class="row">
         <button id="skip" class="btn">شغل التالي</button>
         <button id="end" class="btn danger">انهاء الغرفة</button>
@@ -83,6 +77,6 @@
       <p id="notice-text"></p>
     </div>
   </main>
-  <script src="static/app.js?v=5"></script>
+  <script src="static/app.js?v=6"></script>
 </body>
 </html>
