@@ -275,12 +275,19 @@
     const go = () => send({ t: "close" });
     if (tg && tg.showConfirm) tg.showConfirm("تنهي غرفة المشاهدة للكل؟", (ok) => ok && go()); else if (confirm("تنهي غرفة المشاهدة للكل؟")) go();
   };
-  $("fullscreen").onclick = () => {
-    const el = $("stage");
-    if (document.fullscreenElement) return document.exitFullscreen();
-    if (el.requestFullscreen) el.requestFullscreen().catch(() => tg && tg.requestFullscreen && tg.requestFullscreen());
-    else if (tg && tg.requestFullscreen) tg.requestFullscreen();
-  };
+  // fullscreen: Telegram's phones have no browser fullscreen for a page part, so the page does it itself (the
+  // style turns the video sideways on an upright phone); Telegram hides its own bar too where it can.
+  function setFull(on) {
+    document.body.classList.toggle("full", on);
+    const back = tg && tg.BackButton;
+    try {
+      if (tg && tg.isVersionAtLeast && tg.isVersionAtLeast("8.0")) { if (on) tg.requestFullscreen(); else tg.exitFullscreen(); }
+    } catch (e) { /* older Telegram: the page's own fullscreen is enough */ }
+    if (back) { if (on) back.show(); else back.hide(); }
+  }
+  if (tg && tg.BackButton) tg.BackButton.onClick(() => setFull(false));
+  $("fullscreen").onclick = () => setFull(!document.body.classList.contains("full"));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") setFull(false); });
 
   connect();
 })();

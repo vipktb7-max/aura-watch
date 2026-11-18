@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>غرفة مشاهدة</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="static/style.css?v=7">
+  <link rel="stylesheet" href="static/style.css?v=8">
 </head>
 <body>
   <main id="app">
@@ -41,7 +41,10 @@
         <span class="countdown-n" id="countdown-n">10</span>
         <span class="countdown-text">يشتغل بعده ↤ <b id="countdown-title"></b></span>
       </div>
-      <button id="fullscreen" class="fs" title="شاشة كاملة" aria-label="شاشة كاملة">⛶</button>
+      <button id="fullscreen" class="fs" title="شاشة كاملة" aria-label="شاشة كاملة">
+        <svg class="fs-in" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+        <svg class="fs-out" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>
+      </button>
     </section>
 
     <p id="who" class="who"></p>
@@ -76,6 +79,6 @@
       <p id="notice-text"></p>
     </div>
   </main>
-  <script src="static/app.js?v=7"></script>
+  <script src="static/app.js?v=8"></script>
 </body>
 </html>

@@ -29,14 +29,28 @@ h1 { font-size: 17px; margin: 0; white-space: nowrap; overflow: hidden; text-ove
 
 .stage { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: var(--radius); overflow: hidden; }
 .stage iframe, #player { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-.stage:fullscreen { border-radius: 0; aspect-ratio: auto; }
 .shield { position: absolute; inset: 0; }                 /* viewers follow the host: no tapping the player */
 .join { position: absolute; inset: 0; margin: auto; width: max-content; height: max-content; display: flex; align-items: center;
   gap: 10px; padding: 12px 22px; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-text);
   font: inherit; font-weight: 600; cursor: pointer; box-shadow: 0 6px 24px rgb(0 0 0 / 35%); }
 .join-icon { font-size: 13px; }
-.fs { position: absolute; bottom: 8px; left: 8px; width: 34px; height: 34px; border: 0; border-radius: 10px;
-  background: rgb(0 0 0 / 55%); color: #fff; font-size: 16px; cursor: pointer; }
+/* bottom-right like YouTube's own button; wide enough to sit over YouTube's logo there */
+.fs { position: absolute; bottom: 4px; right: 4px; width: clamp(128px, 36%, 168px); height: 38px; border: 0;
+  border-radius: 10px; background: #0f0f0f; color: #fff; cursor: pointer; display: flex; align-items: center; direction: ltr;
+  justify-content: flex-end; padding: 0 12px; z-index: 3; }
+.fs svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round;
+  stroke-linejoin: round; }
+.fs .fs-out, body.full .fs .fs-in { display: none; }
+body.full .fs .fs-out { display: block; }
+
+/* fullscreen inside Telegram: the video fills the screen; an upright phone shows it sideways, like YouTube */
+body.full { overflow: hidden; }
+body.full .stage { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; aspect-ratio: auto;
+  border-radius: 0; z-index: 50; }
+@media (orientation: portrait) {
+  body.full .stage { top: 50%; left: 50%; width: 100vh; width: 100dvh; height: 100vw;
+    transform: translate(-50%, -50%) rotate(90deg); }
+}
 
 .who { margin: 8px 2px 12px; color: var(--hint); font-size: 13px; }
 
