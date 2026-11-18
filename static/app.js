@@ -19,7 +19,7 @@
   const guest = qs.get("guest") || "";                 // local testing in a plain browser (server in dev mode)
 
   let ws = null, state = null, got = 0, offset = 0, me = { id: 0, host: false };
-  let player = null, ready = false, joined = false, retry = 800, applying = false, shownQuery = null;
+  let player = null, ready = false, joined = false, retry = 800, shownQuery = null, mineUntil = 0;
 
   // ---------------------------------------------------------------- where the room is now
   function target() {
@@ -79,7 +79,6 @@
     $("shield").hidden = me.host || !hasVideo();
     $("empty").hidden = hasVideo();
     $("empty-text").textContent = me.host ? "ابحث فوق واختار مقطع من النتايج" : "صاحب الغرفة يختار مقطع";
-    $("skip").disabled = !(s.next && s.next.length);
     $("tap-back").hidden = $("tap-fwd").hidden = !me.host || !hasVideo();
     renderVideos("results", s.results || [], { pick: true });
     $("results-box").hidden = !(s.results && s.results.length);
@@ -94,7 +93,6 @@
     if (!player) return makePlayer(s.video.id);
     if (!ready) return;
     if (!old || !old.video || old.video.id !== s.video.id) {
-      applying = true;
       if (s.playing && joined) player.loadVideoById({ videoId: s.video.id, startSeconds: target() });
       else player.cueVideoById({ videoId: s.video.id, startSeconds: target() });
       return;
@@ -105,12 +103,24 @@
   // viewers (and the host's other tabs) follow the room
   function follow() {
     if (!player || !ready || !state || state.closed || !hasVideo()) return;
+    $("join").hidden = joined || !state.playing;
+    if (me.host && performance.now() < mineUntil) return;   // the host just moved it: the room catches up first
     const want = target();
     const st = player.getPlayerState();
-    if (Math.abs((player.getCurrentTime() || 0) - want) > 1.5) { applying = true; player.seekTo(want, true); }
-    if (state.playing && joined && st !== YT.PlayerState.PLAYING && st !== YT.PlayerState.BUFFERING) { applying = true; player.playVideo(); }
-    if (!state.playing && st === YT.PlayerState.PLAYING) { applying = true; player.pauseVideo(); }
-    $("join").hidden = joined || !state.playing;
+    if (Math.abs((player.getCurrentTime() || 0) - want) > 1.5) player.seekTo(want, true);
+    if (state.playing && joined && st !== YT.PlayerState.PLAYING && st !== YT.PlayerState.BUFFERING) player.playVideo();
+    if (!state.playing && st === YT.PlayerState.PLAYING) player.pauseVideo();
+  }
+
+  // what the host did: the room on this phone changes at once (so nothing here undoes it), then the server
+  function mine(t, pos) {
+    if (state) {
+      state.pos = pos; got = performance.now();
+      state.playing = t === "play" || (t === "seek" && state.playing);
+      $("live").hidden = !state.playing;
+    }
+    mineUntil = performance.now() + 1500;
+    send({ t, pos });
   }
   setInterval(follow, 2000);
 
@@ -142,12 +152,12 @@
       }
     });
   }
+  // the host's own player is the room: his pause pauses it, his play plays it (viewers' players only follow)
   function onPlayer(e) {
-    if (applying) { if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.PAUSED || e.data === YT.PlayerState.CUED) applying = false; return; }
-    if (!me.host || !state) return;
+    if (!me.host || !state || !hasVideo()) return;
     const pos = player.getCurrentTime() || 0;
-    if (e.data === YT.PlayerState.PLAYING && (!state.playing || Math.abs(pos - target()) > 1.5)) send({ t: "play", pos });
-    else if (e.data === YT.PlayerState.PAUSED && state.playing) send({ t: "pause", pos });
+    if (e.data === YT.PlayerState.PLAYING && (!state.playing || Math.abs(pos - target()) > 1.5)) { joined = true; mine("play", pos); }
+    else if (e.data === YT.PlayerState.PAUSED && state.playing) mine("pause", pos);
     else if (e.data === YT.PlayerState.ENDED && !state.ended) send({ t: "ended" });
   }
   const api = document.createElement("script");
@@ -244,7 +254,9 @@
     dbl.total += 10;
     const dir = side === "fwd" ? 1 : -1;
     const pos = Math.max(0, dbl.base + dir * dbl.total);
-    applying = true; player.seekTo(pos, true);
+    player.seekTo(pos, true);
+    if (state) { state.pos = pos; got = performance.now(); }
+    mineUntil = performance.now() + 1500;
     const b = $("seek-bubble");
     b.className = "bubble " + (side === "fwd" ? "right" : "left");
     const arrow = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -254,12 +266,11 @@
     if (side === "fwd") b.replaceChildren(words, arrow); else b.replaceChildren(arrow, words);
     b.hidden = false;
     clearTimeout(dbl.timer); clearTimeout(dbl.hide);
-    dbl.timer = setTimeout(() => { joined = true; send({ t: "seek", pos }); dbl.total = 0; dbl.side = ""; }, 800);
+    dbl.timer = setTimeout(() => { mine("seek", player.getCurrentTime() || pos); dbl.total = 0; dbl.side = ""; }, 800);
     dbl.hide = setTimeout(() => { b.hidden = true; }, 900);
   }
   $("tap-fwd").addEventListener("pointerdown", (e) => { e.preventDefault(); dblTap("fwd"); });
   $("tap-back").addEventListener("pointerdown", (e) => { e.preventDefault(); dblTap("back"); });
-  $("skip").onclick = () => { joined = true; send({ t: "skip" }); };
   $("end").onclick = () => {
     const go = () => send({ t: "close" });
     if (tg && tg.showConfirm) tg.showConfirm("تنهي غرفة المشاهدة للكل؟", (ok) => ok && go()); else if (confirm("تنهي غرفة المشاهدة للكل؟")) go();
