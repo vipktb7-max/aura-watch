@@ -51,6 +51,10 @@
         ws.onclose = null;
         return notice(msg.why === "room" ? "هذي الغرفة انتهت او ما هي موجودة" : "افتح الغرفة من زر البوت في القروب");
       }
+      if (msg.t === "verified") {                      // the bot's confirm button: its Mini App works
+        ws.onclose = null;
+        return notice("تم اعداد غرف المشاهده ✅ ارجع للقروب واكتب مشاهده");
+      }
       if (msg.t === "state") onState(msg);
     };
     ws.onclose = () => {
