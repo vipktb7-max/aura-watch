@@ -1,6 +1,6 @@
 // Watch room page. The server keeps the room's moment; only the host moves it; everyone follows.
-// The host searches YouTube here, picks a video, and may choose what plays next; at the end of a video
-// the server counts down 10 seconds and plays the chosen one (else the first of «التالي»).
+// The host searches YouTube here; a tap on a result or an episode plays it at once for everyone.
+// Nothing plays by itself after a video.
 (function () {
   "use strict";
   const tg = window.Telegram && window.Telegram.WebApp;
@@ -75,8 +75,9 @@
       return notice("انتهت غرفة المشاهدة، شكراً لكم");
     }
     notice("");
-    $("room-title").textContent = s.title || (s.video && s.video.title) || "غرفة مشاهدة";
-    $("video-title").textContent = s.title && s.video ? (s.video.title || "") : (s.video && s.video.channel) || "";
+    $("room-title").textContent = (s.video && s.video.title) || s.title || "غرفة مشاهدة";
+    $("video-title").textContent = hasVideo()
+      ? [s.video.channel, s.video.duration ? fmt(s.video.duration) : ""].filter(Boolean).join(" · ") : "";
     $("live").hidden = !s.playing;
     $("who").textContent = me.host ? "انت صاحب الغرفة، الكل يشوف معك" : `يتحكم بالغرفة ↤ ${s.host.name}`;
     $("search-box").hidden = !me.host;
@@ -91,12 +92,8 @@
     renderVideos("results", s.results || [], { pick: true });
     $("results-box").hidden = !(s.results && s.results.length);
     $("results-q").textContent = s.query || "";
-    renderVideos("next-list", s.next || [], { choose: true, chosen: s.chosen });
-    $("next-box").hidden = !hasVideo();
-    $("next-hint").textContent = me.host ? "اضغط على اللي تبيه بعده" : "";
     renderEpisodes(s);
     renderViewers(s);
-    countdown();
     if (!hasVideo()) { if (player && ready) player.stopVideo(); return; }
     if (!player) return makePlayer(s.video.id);
     if (!ready) return;
@@ -112,6 +109,7 @@
   function follow() {
     if (!player || !ready || !state || state.closed || !hasVideo()) return;
     $("join").hidden = joined || !state.playing;
+    if (adLikely) return;                                    // an ad on this phone: leave YouTube alone
     if (me.host && performance.now() < mineUntil) return;   // the host just moved it: the room catches up first
     const want = target();
     const st = player.getPlayerState();
@@ -131,18 +129,6 @@
     send({ t, pos });
   }
   setInterval(follow, 2000);
-
-  // the 10 seconds before the next video (the server plays it; this only shows it)
-  function countdown() {
-    const s = state;
-    const on = !!(s && s.advance_at && s.ended && !s.closed);
-    $("countdown").hidden = !on;
-    if (!on) return;
-    const left = Math.max(0, Math.ceil(s.advance_at - (Date.now() / 1000 + offset)));
-    const nxt = s.next[(s.chosen !== null && s.chosen < s.next.length) ? s.chosen : 0] || {};
-    $("countdown-n").textContent = left;
-    $("countdown-title").textContent = nxt.title || "";
-  }
 
   // ---------------------------------------------------------------- YouTube player
   window.onYouTubeIframeAPIReady = function () { if (hasVideo() && !player) makePlayer(state.video.id); };
@@ -168,9 +154,7 @@
     else if (e.data === YT.PlayerState.PAUSED && state.playing) mine("pause", pos);
     else if (e.data === YT.PlayerState.ENDED && !state.ended) send({ t: "ended" });
   }
-  // YouTube draws its title over the top of its player and its strip over the bottom, and hides them only when
-  // it wants. So its player is made taller than the picture (black above and below it, where those go) and the
-  // picture's box clips the rest: the picture stays the same, those never show.
+  // the picture's box: 16:9 in the middle of the stage. YouTube's own title and strip show (its «تخطي الإعلان» too).
   function layoutVideo() {
     const st = $("stage"), W = st.clientWidth, H = st.clientHeight;       // the stage's own size (sideways too)
     if (!W || !H) return;
@@ -180,9 +164,23 @@
     f.style.left = Math.round((W - vw) / 2) + "px"; f.style.top = Math.round((H - vh) / 2) + "px";
     f.style.width = Math.round(vw) + "px"; f.style.height = Math.round(vh) + "px";
     f.style.right = f.style.bottom = "auto";
-    const pad = Math.round(Math.max(72, vh * 0.3));
-    const p = $("player");
-    if (p) { p.style.top = -pad + "px"; p.style.height = Math.round(vh + 2 * pad) + "px"; }
+  }
+  // an ad: YouTube says «playing» but the video's time stands still. Then taps go straight to YouTube (its
+  // «تخطي الإعلان»), our layer and controls step aside, and the room doesn't pull this player meanwhile.
+  let adLikely = false, lastT = -1, still = 0;
+  setInterval(() => {
+    if (!player || !ready || !hasVideo() || !joined) { still = 0; return setAd(false); }
+    const st = player.getPlayerState(), t = player.getCurrentTime() || 0;
+    const going = st === YT.PlayerState.PLAYING || st === YT.PlayerState.BUFFERING || st === YT.PlayerState.UNSTARTED;
+    still = going && state.playing && Math.abs(t - lastT) < 0.2 ? still + 1 : 0;
+    lastT = t;
+    setAd(still >= 2);
+  }, 1000);
+  function setAd(on) {
+    if (on === adLikely) return;
+    adLikely = on;
+    $("stage").classList.toggle("ad", on);
+    if (on) hideOverlay(true);
   }
   if (window.ResizeObserver) new ResizeObserver(layoutVideo).observe($("stage"));
   window.addEventListener("resize", layoutVideo);
@@ -200,28 +198,16 @@
     const t = document.createElement("p"); t.className = "vt"; t.textContent = v.title || "";
     const c = document.createElement("p"); c.className = "vc"; c.textContent = v.channel || "";
     meta.append(t, c);
-    const none = opts.chosen === null || opts.chosen === undefined;
-    if (opts.choose && (none ? i === 0 : i === opts.chosen)) {
-      li.className = "picked";
-      const b = document.createElement("span"); b.className = "badge";
-      b.textContent = none ? "يشتغل بعده" : "اخترته بعده";
-      meta.appendChild(b);
-    }
     if (opts.pick && state.video && v.id === state.video.id) li.className = "picked";
     li.append(th, meta);
     if (me.host) {
       if (opts.pick) li.onclick = () => { joined = true; send({ t: "pick", i }); window.scrollTo({ top: 0, behavior: "smooth" }); };
-      if (opts.choose) li.onclick = () => send({ t: "choose", i });
     }
     return li;
   }
   function renderVideos(id, list, opts) {
     const ul = $(id);
     ul.className = "videos" + (me.host ? " host" : "");
-    if (!list.length && opts.choose) {
-      const p = document.createElement("li"); p.className = "muted"; p.textContent = "يجهز…";
-      return ul.replaceChildren(p);
-    }
     ul.replaceChildren(...list.map((v, i) => row(v, i, opts)));
   }
   function renderEpisodes(s) {
@@ -232,12 +218,13 @@
       const li = document.createElement("li");
       li.textContent = it.title || `الحلقة ${i + 1}`;
       if (i === s.index) li.className = "now";
-      if (me.host && i !== s.index) li.onclick = () => send({ t: "video", index: i });
+      if (me.host && i !== s.index) li.onclick = () => { joined = true; send({ t: "video", index: i }); window.scrollTo({ top: 0, behavior: "smooth" }); };
       return li;
     }));
   }
   function renderViewers(s) {
     $("count").textContent = s.viewers.length;
+    $("vcount-n").textContent = s.viewers.length;
     $("viewers").replaceChildren(...s.viewers.map((v) => {
       const li = document.createElement("li");
       const av = document.createElement("span"); av.className = "avatar"; av.textContent = (v.name || "?").trim().charAt(0);
@@ -253,7 +240,6 @@
     document.querySelectorAll(".time").forEach((el) => {
       el.textContent = fmt(Date.now() / 1000 + offset - Number(el.dataset.since));
     });
-    countdown();
   }
   setInterval(tick, 1000);
 

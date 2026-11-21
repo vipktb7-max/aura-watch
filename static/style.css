@@ -1,34 +1,57 @@
-/* Watch room: Telegram's own colours when opened inside Telegram (light or dark), a calm dark set otherwise. */
+/* Watch room: Aura's own look (dark night blue with purple light), the same in every Telegram theme. */
 :root {
-  --bg: var(--tg-theme-bg-color, #0f1115);
-  --card: var(--tg-theme-secondary-bg-color, #171a21);
-  --text: var(--tg-theme-text-color, #eef0f4);
-  --hint: var(--tg-theme-hint-color, #8b93a3);
-  --accent: var(--tg-theme-button-color, #3b82f6);
-  --accent-text: var(--tg-theme-button-text-color, #ffffff);
-  --danger: #e5484d;
-  --line: color-mix(in srgb, var(--hint) 22%, transparent);
-  --radius: 14px;
+  --bg: #0b0d18;
+  --card: rgb(255 255 255 / 3.5%);
+  --text: #f3f4f8;
+  --hint: #8b8fb0;
+  --accent: #8b5cf6;
+  --accent-text: #ffffff;
+  --danger: #f05462;
+  --line: rgb(255 255 255 / 9%);
+  --radius: 16px;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }     /* the page hides parts (host controls, notices) with «hidden» */
-html, body { margin: 0; background: var(--bg); color: var(--text); }
+html { background: var(--bg); }
+html, body { margin: 0; color: var(--text); }
 body {
+  min-height: 100vh;
   font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Tahoma, "Noto Sans Arabic", sans-serif;
   -webkit-tap-highlight-color: transparent;
+  background:                                                    /* the purple light in the corners and at the foot */
+    radial-gradient(55% 140px at 100% 0, rgb(124 58 237 / 34%), transparent 75%),
+    radial-gradient(45% 120px at 0 0, rgb(124 58 237 / 18%), transparent 75%),
+    radial-gradient(70% 160px at 50% 100%, rgb(124 58 237 / 30%), transparent 75%),
+    var(--bg);
 }
-#app { max-width: 720px; margin: 0 auto; padding: 12px 14px 28px; }
+#app { max-width: 720px; margin: 0 auto; padding: 14px 16px 18px; }
 
-.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
-.titles { min-width: 0; }
-h1 { font-size: 17px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sub { margin: 2px 0 0; color: var(--hint); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.live { flex: none; font-size: 12px; padding: 3px 10px; border-radius: 999px;
+/* the Aura logo: the purple mark and the word, in the middle (again, smaller, at the foot) */
+.brand { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: center; gap: 11px;
+  direction: ltr; margin: 6px 0 20px; }
+.brand::before { content: ""; position: absolute; z-index: -1; left: 50%; top: 50%; width: 230px; height: 74px;
+  transform: translate(-50%, -50%); background: radial-gradient(closest-side, rgb(139 92 246 / 30%), transparent);
+  filter: blur(6px); }
+.brand .mark { width: 46px; height: 38px; filter: drop-shadow(0 6px 16px rgb(139 92 246 / 55%)); }
+.brand .word { font: 600 36px/1 "Outfit", system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: 1.5px;
+  padding-bottom: 2px; color: #fff; background: linear-gradient(180deg, #ffffff 35%, #d9ccff); -webkit-background-clip: text;
+  background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 2px 12px rgb(167 139 250 / 35%)); }
+.brand.foot { margin: 32px 0 4px; gap: 9px; opacity: .95; }
+.brand.foot::before { width: 180px; height: 56px; }
+.brand.foot .mark { width: 34px; height: 28px; }
+.brand.foot .word { font-size: 27px; }
+
+/* the video's title and «channel · time» under it */
+.now { margin: 12px 4px 4px; }
+h1 { font-size: 17px; line-height: 1.4; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sub { margin: 4px 0 0; color: var(--hint); font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.live { font-size: 11.5px; padding: 1px 8px; border-radius: 999px; margin-inline-end: 8px;
   background: color-mix(in srgb, var(--danger) 18%, transparent); color: var(--danger); }
 .live::before { content: "● "; }
 
-.stage { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: var(--radius); overflow: hidden; }
-/* the picture's own box; YouTube's player inside is taller (its title and bottom strip fall outside, clipped) */
+.stage { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: var(--radius); overflow: hidden;
+  border: 1px solid var(--line); box-shadow: 0 10px 30px rgb(0 0 0 / 35%); }
+/* the picture's own box (YouTube's title and strip show inside it) */
 .frame { position: absolute; inset: 0; overflow: hidden; }
 .frame iframe, #player { position: absolute; left: 0; top: 0; width: 100%; height: 100%; border: 0; }
 .join { position: absolute; inset: 0; margin: auto; width: max-content; height: max-content; display: flex; align-items: center;
@@ -38,24 +61,24 @@ h1 { font-size: 17px; margin: 0; white-space: nowrap; overflow: hidden; text-ove
 /* fullscreen inside Telegram: the video fills the screen; an upright phone shows it sideways, like YouTube */
 body.full { overflow: hidden; }
 body.full .stage { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; aspect-ratio: auto;
-  border-radius: 0; z-index: 50; }
+  border-radius: 0; border: 0; z-index: 50; }
 @media (orientation: portrait) {
   body.full .stage { top: 50%; left: 50%; width: 100vh; width: 100dvh; height: 100vw;
     transform: translate(-50%, -50%) rotate(90deg); }
 }
 
-.who { margin: 8px 2px 12px; color: var(--hint); font-size: 13px; }
+.who { margin: 4px 4px 14px; color: var(--hint); font-size: 12.5px; }
 
 .controls { display: grid; gap: 8px; margin-bottom: 14px; }
 .row { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
-.btn { min-height: 44px; border: 0; border-radius: 12px; background: var(--card); color: var(--text);
+.btn { min-height: 44px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); color: var(--text);
   font: inherit; font-weight: 600; cursor: pointer; }
 .btn.primary { background: var(--accent); color: var(--accent-text); }
 .btn.danger { color: var(--danger); }
 .btn:disabled { opacity: .45; cursor: default; }
 
-.card { background: var(--card); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; }
-h2 { font-size: 14px; margin: 0 0 8px; display: flex; align-items: center; gap: 8px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 12px; margin-bottom: 14px; }
+h2 { font-size: 14px; margin: 2px 4px 10px; display: flex; align-items: center; gap: 8px; }
 .count { font-size: 12px; color: var(--hint); font-weight: 500; }
 
 .episodes { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow: auto; }
@@ -78,36 +101,34 @@ h2 { font-size: 14px; margin: 0 0 8px; display: flex; align-items: center; gap: 
   background: color-mix(in srgb, var(--bg) 94%, transparent); }
 .notice p { max-width: 320px; font-size: 16px; }
 
-/* the host's YouTube search */
-.search { display: flex; gap: 8px; margin-bottom: 10px; }
-.search input { flex: 1; min-width: 0; height: 42px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px;
-  background: var(--card); color: var(--text); font: inherit; outline: none; }
-.search input:focus { border-color: var(--accent); }
-.search-go { flex: none; width: 52px; height: 42px; border: 0; border-radius: 999px; background: var(--card);
+/* the host's YouTube search: one pill, the words on the right, the glass on the left */
+.search { display: flex; align-items: center; height: 50px; padding: 0 18px 0 8px; margin-bottom: 18px;
+  border: 1px solid rgb(255 255 255 / 14%); border-radius: 999px; background: rgb(255 255 255 / 3%); }
+.search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgb(139 92 246 / 18%); }
+.search input { flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; background: transparent; color: var(--text);
+  font: inherit; font-size: 16px; outline: none; }
+.search input::placeholder { color: var(--hint); }
+.search input::-webkit-search-cancel-button { display: none; }
+.search-go { flex: none; width: 42px; height: 42px; border: 0; border-radius: 50%; background: transparent;
   color: var(--text); display: grid; place-items: center; cursor: pointer; }
-.search-go svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.search-go svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
 
-/* an empty room, and the countdown to the next video */
+/* an empty room */
 .empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; text-align: center;
-  color: #c9ced8; background: radial-gradient(circle at 50% 40%, #1f2430, #000); }
+  color: #c9cbe0; background: radial-gradient(circle at 50% 40%, #1c1a3a, #05060c); }
 .empty p { margin: 0; max-width: 260px; }
-.countdown { position: absolute; inset-inline: 10px; bottom: 10px; display: flex; align-items: center; gap: 10px;
-  padding: 8px 12px; border-radius: 12px; background: rgb(0 0 0 / 72%); color: #fff; font-size: 13px; }
-.countdown-n { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
-  background: var(--accent); color: var(--accent-text); font-weight: 700; font-variant-numeric: tabular-nums; }
-.countdown-text { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* video rows, like YouTube's lists */
-.videos { list-style: none; margin: 0; padding: 0; max-height: 420px; overflow: auto; }
-.videos li { display: flex; gap: 10px; padding: 6px; border-radius: 12px; align-items: flex-start; }
-.videos li + li { margin-top: 2px; }
+.videos { list-style: none; margin: 0; padding: 0; }
+.videos li { display: flex; gap: 12px; padding: 6px; border-radius: 14px; align-items: center; }
+.videos li + li { margin-top: 6px; }
 .videos.host li { cursor: pointer; }
 .videos.host li:hover { background: var(--line); }
 .videos li.picked { background: color-mix(in srgb, var(--accent) 16%, transparent); }
-.thumb { position: relative; flex: none; width: 128px; aspect-ratio: 16 / 9; border-radius: 9px; overflow: hidden;
+.thumb { position: relative; flex: none; width: 136px; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden;
   background: #000 center / cover no-repeat; }
-.dur { position: absolute; bottom: 4px; left: 4px; padding: 0 5px; border-radius: 5px; background: rgb(0 0 0 / 80%);
-  color: #fff; font-size: 11px; line-height: 17px; direction: ltr; font-variant-numeric: tabular-nums; }
+.dur { position: absolute; bottom: 5px; left: 5px; padding: 0 6px; border-radius: 6px; background: rgb(0 0 0 / 80%);
+  color: #fff; font-size: 11.5px; line-height: 18px; direction: ltr; font-variant-numeric: tabular-nums; }
 .meta { min-width: 0; flex: 1; }
 .vt { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2;
   -webkit-box-orient: vertical; overflow: hidden; }
@@ -127,6 +148,15 @@ h2 { font-size: 14px; margin: 0 0 8px; display: flex; align-items: center; gap: 
 
 /* our own layer over the video (YouTube's controls are off): one tap shows it, the next hides it at once */
 .touch { position: absolute; inset: 0; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+/* an ad on this phone: taps go to YouTube (its «تخطي الإعلان»), our layer steps aside */
+.stage.ad .touch, .stage.ad .overlay { pointer-events: none; }
+.stage.ad .overlay { display: none; }
+/* how many are in the room: a tiny person badge at the video's top left (not in fullscreen) */
+.vcount { position: absolute; top: 8px; left: 8px; z-index: 3; display: flex; align-items: center; gap: 3px;
+  padding: 1px 7px 1px 6px; border-radius: 999px; background: rgb(0 0 0 / 55%); color: #fff;
+  font-size: 11px; line-height: 18px; direction: ltr; pointer-events: none; }
+.vcount svg { width: 11px; height: 11px; fill: currentColor; }
+body.full .vcount { display: none; }
 .overlay { position: absolute; inset: 0; pointer-events: none; background:
   linear-gradient(to top, rgb(0 0 0 / 70%), transparent 38%), rgb(0 0 0 / 22%); }
 .overlay > * { pointer-events: auto; }

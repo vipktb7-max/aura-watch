@@ -5,16 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>غرفة مشاهدة</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="static/style.css?v=10">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@600&display=swap">
+  <link rel="stylesheet" href="static/style.css?v=14">
 </head>
 <body>
   <main id="app">
-    <header class="top">
-      <div class="titles">
-        <h1 id="room-title">غرفة مشاهدة</h1>
-        <p id="video-title" class="sub"></p>
-      </div>
-      <span id="live" class="live" hidden>مباشر</span>
+    <header class="brand" aria-label="Aura">
+      <svg class="mark" viewBox="0 0 48 40" aria-hidden="true">
+        <defs>
+          <linearGradient id="aura-g" x1="0" y1="0" x2=".7" y2="1">
+            <stop offset="0" stop-color="#e9ddff"/><stop offset=".35" stop-color="#a78bfa"/><stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+          <linearGradient id="aura-g2" x1="1" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#4c1d95"/>
+          </linearGradient>
+        </defs>
+        <g stroke-linejoin="round" stroke-width="2.2">
+          <path d="M3.5 37 L24 3.5 L28.8 11.3 L13.2 37 Z" fill="url(#aura-g2)" stroke="url(#aura-g2)"/>
+          <path d="M24 3.5 L44.5 37 L34.8 37 L19.2 11.3 Z" fill="url(#aura-g)" stroke="url(#aura-g)"/>
+        </g>
+        <path d="M39.5 2 L40.4 4.6 L43 5.5 L40.4 6.4 L39.5 9 L38.6 6.4 L36 5.5 L38.6 4.6 Z" fill="#f3e8ff"/>
+      </svg>
+      <span class="word">Aura</span>
     </header>
 
     <form id="search-box" class="search" hidden>
@@ -30,6 +43,10 @@
         <p id="empty-text">صاحب الغرفة يختار مقطع</p>
       </div>
       <div id="touch" class="touch" hidden></div>
+      <span id="vcount" class="vcount" aria-label="الموجودين">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7z"/></svg>
+        <span id="vcount-n">0</span>
+      </span>
       <div id="seek-bubble" class="bubble" hidden></div>
       <div id="overlay" class="overlay" hidden>
         <button id="bigplay" class="bigplay" aria-label="تشغيل او ايقاف">
@@ -51,11 +68,12 @@
         <span class="join-icon" aria-hidden="true">▶</span>
         <span>انضم للمشاهدة</span>
       </button>
-      <div id="countdown" class="countdown" hidden>
-        <span class="countdown-n" id="countdown-n">10</span>
-        <span class="countdown-text">يشتغل بعده ↤ <b id="countdown-title"></b></span>
-      </div>
     </section>
+
+    <div class="now">
+      <h1 id="room-title">غرفة مشاهدة</h1>
+      <p class="sub"><span id="live" class="live" hidden>مباشر</span><span id="video-title"></span></p>
+    </div>
 
     <p id="who" class="who"></p>
 
@@ -63,11 +81,6 @@
       <div class="row">
         <button id="end" class="btn danger">انهاء الغرفة</button>
       </div>
-    </section>
-
-    <section id="next-box" class="card" hidden>
-      <h2>التالي <span id="next-hint" class="count"></span></h2>
-      <ul id="next-list" class="videos"></ul>
     </section>
 
     <section id="results-box" class="card" hidden>
@@ -85,10 +98,20 @@
       <ul id="viewers" class="viewers"></ul>
     </section>
 
+    <footer class="brand foot" aria-hidden="true">
+      <svg class="mark" viewBox="0 0 48 40">
+        <g stroke-linejoin="round" stroke-width="2.2">
+          <path d="M3.5 37 L24 3.5 L28.8 11.3 L13.2 37 Z" fill="url(#aura-g2)" stroke="url(#aura-g2)"/>
+          <path d="M24 3.5 L44.5 37 L34.8 37 L19.2 11.3 Z" fill="url(#aura-g)" stroke="url(#aura-g)"/>
+        </g>
+      </svg>
+      <span class="word">Aura</span>
+    </footer>
+
     <div id="notice" class="notice" hidden>
       <p id="notice-text"></p>
     </div>
   </main>
-  <script src="static/app.js?v=11"></script>
+  <script src="static/app.js?v=14"></script>
 </body>
 </html>
